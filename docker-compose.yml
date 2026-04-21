@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "8883:8883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./certs:/etc/mosquitto/certs:ro
+    restart: unless-stopped
+
+  iotsentinel:
+    build: .
+    depends_on:
+      - mosquitto
+    env_file: .env
+    volumes:
+      - ./certs:/app/certs:ro
+      - ./logs:/app/logs
+    command: ["python", "-m", "src.cli.main", "--mode", "monitor", "--cycles", "1000"]
+    restart: unless-stopped
