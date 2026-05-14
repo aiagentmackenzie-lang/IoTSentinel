@@ -41,9 +41,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
- pythonpath = [
-    ".",
-]
+pythonpath = [""]
 
 [tool.bandit]
 exclude_dirs = ["tests", "venv", ".venv"]

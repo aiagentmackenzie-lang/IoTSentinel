@@ -94,7 +94,7 @@ def test_constant_baseline_detects_any_deviation():
     results = profiler.update_and_analyze(device_id, {"temperature_c": 999.0})
 
     assert any(result.is_anomaly for result in results)
-    assert all(result.score == float("inf") for result in results)
+    assert all(result.score == 9999.0 for result in results)
 
 
 def test_boolean_payload_fields_are_not_profiled():

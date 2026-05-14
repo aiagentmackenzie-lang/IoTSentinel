@@ -4,7 +4,7 @@ Each method simulates a real-world attack pattern documented in MITRE ATT&CK for
 USE ONLY in authorized, isolated lab environments.
 """
 import copy
-import random
+import random  # nosec B311 - simulation-only, not cryptographic
 from datetime import datetime, timezone, timedelta
 from src.devices.base_device import DeviceReading
 from src.devices.camera import SmartCamera
@@ -52,7 +52,7 @@ class AttackSimulator:
         """
         camera = SmartCamera(device_id=device_id)
         reading = camera.read()
-        reading.payload["outbound_kbps"] = random.uniform(12000, 25000)
+        reading.payload["outbound_kbps"] = random.uniform(12000, 25000)  # nosec B311
         reading.payload["destination_ip"] = "198.51.100.42"  # RFC 5737 test IP
         reading.payload["__attack"] = "data_exfiltration"
         return reading

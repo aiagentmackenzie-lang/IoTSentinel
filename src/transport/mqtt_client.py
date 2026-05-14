@@ -8,7 +8,7 @@ from typing import Any, Callable
 try:
     import paho.mqtt.client as mqtt
 except ImportError:  # pragma: no cover - optional runtime dependency
-    mqtt = None
+    mqtt = None  # type: ignore[assignment]
 
 from src.config.settings import BrokerConfig
 from src.devices.base_device import DeviceReading
@@ -91,6 +91,11 @@ class SecureMQTTClient:
         self._client.on_message = self._on_message
 
     def _on_connect(self, client, userdata, flags, rc, properties=None) -> None:
+        """MQTT connection callback.
+        Note: The `properties` parameter is MQTTv5-specific. If the protocol
+        is ever downgraded from MQTTv5, this callback signature must be
+        adjusted to match the v3.1.1 signature: (client, userdata, flags, rc).
+        """
         if rc == 0:
             logger.info("Connected to MQTT broker")
         else:

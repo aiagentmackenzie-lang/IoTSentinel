@@ -1,4 +1,4 @@
-import random
+import random  # nosec B311 - simulation-only, not cryptographic
 from .base_device import BaseDevice, DeviceReading
 
 
@@ -19,8 +19,8 @@ class SmartCamera(BaseDevice):
             payload={
                 "stream_active": True,
                 "resolution": "1080p",
-                "outbound_kbps": round(random.uniform(*self.NORMAL_BANDWIDTH_KBPS), 1),
-                "inbound_kbps": round(random.uniform(1, 20), 1),
+                "outbound_kbps": round(random.uniform(*self.NORMAL_BANDWIDTH_KBPS), 1),  # nosec B311
+                "inbound_kbps": round(random.uniform(1, 20), 1),  # nosec B311
                 "rtsp_auth_enabled": True,
                 "tls_enabled": True,
             },

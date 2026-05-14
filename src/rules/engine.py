@@ -38,6 +38,8 @@ class RuleEngine:
         violations.extend(self._check_unknown_destination(record))
         violations.extend(self._check_replay_flags(record))
         violations.extend(self._check_message_rate_flags(record))
+        violations.extend(self._check_insecure_protocol(reading, record))
+        violations.extend(self._check_oversized_payload(record))
         return violations
 
     def _check_encryption(self, reading: DeviceReading) -> list[PolicyViolation]:
@@ -55,7 +57,7 @@ class RuleEngine:
                     "Disable plaintext MQTT port 1883; use 8883 exclusively.",
                     "Implement certificate-based mutual authentication (mTLS).",
                 ],
-                cve_references=["CVE-2020-13849"],
+                cve_references=[],
             )]
         return []
 
@@ -103,7 +105,7 @@ class RuleEngine:
                     "Review firmware for unauthorized background processes.",
                     "Implement egress bandwidth limits on switch/firewall.",
                 ],
-                cve_references=["CVE-2022-29889"],
+                cve_references=[],
             )]
         return []
 
@@ -227,5 +229,41 @@ class RuleEngine:
                 "Rate-limit telemetry from the device or its network segment.",
                 "Investigate the device for malware or retry storms.",
                 "Review broker quotas and backpressure settings.",
+            ],
+        )]
+
+    def _check_insecure_protocol(self, reading: DeviceReading, record: ConnectionRecord) -> list[PolicyViolation]:
+        if "INSECURE_PROTOCOL" not in record.flags:
+            return []
+        return [PolicyViolation(
+            rule_id="PROTO-001",
+            owasp_category="I2: Insecure Network Services",
+            stride_threat="Tampering",
+            severity="HIGH",
+            device_id=reading.device_id,
+            description=f"Insecure protocol detected: {reading.protocol}",
+            evidence={"protocol": reading.protocol, "flags": record.flags},
+            remediation=[
+                "Disable plaintext protocol ports on the broker.",
+                "Enforce TLS 1.3 on all device connections.",
+                "Audit device firmware for hardcoded HTTP/Telnet/FTP endpoints.",
+            ],
+        )]
+
+    def _check_oversized_payload(self, record: ConnectionRecord) -> list[PolicyViolation]:
+        if "OVERSIZED_PAYLOAD" not in record.flags:
+            return []
+        return [PolicyViolation(
+            rule_id="DOS-002",
+            owasp_category="I2: Insecure Network Services",
+            stride_threat="Denial of Service",
+            severity="MEDIUM",
+            device_id=record.source_device_id,
+            description=f"Oversized payload ({record.bytes_transferred} bytes) from device.",
+            evidence={"bytes_transferred": record.bytes_transferred, "flags": record.flags},
+            remediation=[
+                "Enforce maximum payload size limits at the broker.",
+                "Investigate the device for compromised firmware.",
+                "Implement payload size validation in the ingestion pipeline.",
             ],
         )]

@@ -190,7 +190,7 @@ class BehaviorProfiler:
             value=value,
             is_anomaly=is_anomaly,
             method=method,
-            score=float("inf") if is_anomaly else 0.0,
+            score=9999.0 if is_anomaly else 0.0,  # JSON-serializable sentinel for infinite deviation
             severity="CRITICAL" if is_anomaly else "LOW",
             description=(
                 f"Value {value:.2f} deviates from stable baseline {baseline_value:.2f}"

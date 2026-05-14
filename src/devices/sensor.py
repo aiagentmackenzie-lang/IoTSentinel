@@ -1,4 +1,4 @@
-import random
+import random  # nosec B311 - simulation-only, not cryptographic
 from .base_device import BaseDevice, DeviceReading
 
 
@@ -18,9 +18,9 @@ class TemperatureSensor(BaseDevice):
             device_type="temperature_sensor",
             timestamp=self._utc_now(),
             payload={
-                "temperature_c": round(random.uniform(*self.NORMAL_TEMP_RANGE), 2),
-                "humidity_pct": round(random.uniform(*self.NORMAL_HUMIDITY_RANGE), 2),
-                "battery_pct": random.randint(20, 100),
+                "temperature_c": round(random.uniform(*self.NORMAL_TEMP_RANGE), 2),  # nosec B311
+                "humidity_pct": round(random.uniform(*self.NORMAL_HUMIDITY_RANGE), 2),  # nosec B311
+                "battery_pct": random.randint(20, 100),  # nosec B311
             },
             protocol="MQTT",
             encrypted=True,

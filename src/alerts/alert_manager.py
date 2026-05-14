@@ -105,17 +105,16 @@ class AlertManager:
     def _console_print(self, alert: dict[str, Any]) -> None:
         sev = alert.get("severity", "INFO")
         color = SEVERITY_COLOR.get(sev, "")
-        print(f"\n{color}{'='*60}{RESET}")
-        print(f"{color}[{sev}] {alert['title']}{RESET}")
-        print(f"  Time     : {alert['timestamp']}")
-        print(f"  Device   : {alert['device_id']}")
-        print(f"  Type     : {alert['alert_type']}")
-        print(f"  Detail   : {alert['description']}")
+        logger.critical("%s[%s] %s%s", color + "=" * 60 + RESET, sev, alert["title"], RESET)
+        logger.critical("  Time     : %s", alert["timestamp"])
+        logger.critical("  Device   : %s", alert["device_id"])
+        logger.critical("  Type     : %s", alert["alert_type"])
+        logger.critical("  Detail   : %s", alert["description"])
         if alert.get("remediation"):
-            print("  Remediation:")
+            logger.critical("  Remediation:")
             for step in alert["remediation"]:
-                print(f"    -> {step}")
-        print(f"{color}{'='*60}{RESET}")
+                logger.critical("    -> %s", step)
+        logger.critical("%s%s%s", color, "=" * 60, RESET)
 
     def _write_log(self, alert: dict[str, Any]) -> None:
         try:
@@ -135,13 +134,15 @@ class AlertManager:
 
     def _rotate_log(self) -> None:
         base = self._log_file
+        # Shift existing backups up: .1 → .2, .2 → .3, etc.
         for i in range(self._max_log_backups, 0, -1):
-            src = f"{base}.{i}" if i > 1 else base
+            src = f"{base}.{i}"
             dst = f"{base}.{i + 1}"
             try:
                 os.replace(src, dst)
             except OSError:
                 pass
+        # Current log becomes .1
         try:
             os.replace(base, f"{base}.1")
         except OSError:
@@ -151,8 +152,11 @@ class AlertManager:
         if not self._webhook_url:
             return
         parsed = urllib.parse.urlparse(self._webhook_url)
-        if parsed.scheme not in ("https", "http"):
-            logger.warning("Unsupported webhook scheme: %s", parsed.scheme)
+        if parsed.scheme != "https":
+            logger.warning(
+                "Webhook URL must use HTTPS (got %s). Alert delivery skipped for security.",
+                parsed.scheme,
+            )
             return
         try:
             data = json.dumps({
@@ -165,6 +169,6 @@ class AlertManager:
                 self._webhook_url, data=data,
                 headers={"Content-Type": "application/json"}, method="POST"
             )
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310 - scheme validated as HTTPS above
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             logger.warning("Webhook delivery failed: %s", e)
